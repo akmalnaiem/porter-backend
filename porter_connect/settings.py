@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'porter_connect.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 if os.getenv("DATABASE_URL"):
-    DATABASE = {
+    DATABASES = {
         "default": dj_database_url.parse(
             os.environ.get("DATABASE_URL"),
             conn_max_age=600,
