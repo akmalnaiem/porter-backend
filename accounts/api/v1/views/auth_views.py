@@ -12,6 +12,9 @@ class RegisterView(APIView):
 
         user = serializer.save()
 
+        # Generate JWT Tokens-
+        refresh = RefreshToken.for_user(user)
+
         return Response(
             {
                 "message" : "User registered successfully",
@@ -20,6 +23,10 @@ class RegisterView(APIView):
                     "full_name" : user.full_name,
                     "phone_number" : user.phone_number,
                     "email" : user.email
+                },
+                "tokens" : {
+                    "refresh" :  str(refresh),
+                    "access" : str(refresh.access_token)
                 },
             },
             status = status.HTTP_201_CREATED
