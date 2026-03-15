@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
@@ -12,18 +13,22 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("admin", "Admin"),
     )
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+
     full_name = models.CharField(max_length=70)
 
     phone_number = models.CharField(max_length=15, unique=True)
     email = models.EmailField(unique=True, null=True, blank=True)
 
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="user")
+    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="user", db_index=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     objects = CustomUserManager()
 

@@ -15,6 +15,7 @@ from datetime import timedelta
 from decouple import config
 import os
 import dj_database_url
+from django.contrib.auth import get_user_model
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'accounts',
     'porter',
     'users',
+    'stations',
 ]
 
 MIDDLEWARE = [
@@ -149,6 +151,9 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Implementing SimpleJWT
 AUTH_USER_MODEL = "accounts.User"
@@ -157,6 +162,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PAGINATION_CLASS" : "porter_connect.pagination.DefaultPagination",
 }
 
 ## JWT Config
@@ -203,3 +209,16 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+
+
+User = get_user_model()
+
+try:
+    if not User.objects.filter(email="akmalnaiem25@gmail.com").exists():
+        User.objects.create_superuser(
+            email="akmalnaiem25@gmail.com",
+            phone_number="7828807574",
+            password="zzpp57t83DaBms"
+        )
+except:
+    pass

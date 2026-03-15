@@ -24,10 +24,11 @@ class VerifyOTPView(APIView):
                 {
                     "message" : "Login Successful",
                     "user" : {
-                        "id" : user.id,
+                        "uuid" : user.uuid,
                         "full_name" : user.full_name,
                         "phone_number" : user.phone_number,
                         "email" : user.email,
+                        "profile_photo" : user.profile_photo.url if user.profile_photo else None
                     },
                     "tokens" : {
                         "refresh" : serializer.validated_data["refresh"],

@@ -19,10 +19,11 @@ class RegisterView(APIView):
             {
                 "message" : "User registered successfully",
                 "user": {
-                    "id" : user.id,
+                    "uuid" : user.uuid,
                     "full_name" : user.full_name,
                     "phone_number" : user.phone_number,
-                    "email" : user.email
+                    "email" : user.email,
+                    "profile_photo" : user.profile_photo.url if user.profile_photo else None
                 },
                 "tokens" : {
                     "refresh" :  str(refresh),
@@ -39,10 +40,12 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.validated_data["user"]
+        user = serializer.validated_data.get("user")
 
         # Generate JWT Token
         refresh = RefreshToken.for_user(user)
+
+        
 
         return Response(
             {
@@ -52,6 +55,7 @@ class LoginView(APIView):
                     "full_name" : user.full_name,
                     "phone_number" : user.phone_number,
                     "email" : user.email,
+                    "profile_photo" : user.profile_photo.url if user.profile_photo else None
                 },
                 "tokens" : {
                     "refresh" : str(refresh),
