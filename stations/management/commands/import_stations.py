@@ -19,7 +19,7 @@ class Command(BaseCommand):
         file_path = os.path.join(
             settings.BASE_DIR,
             "stations",
-            "data",
+            "Data",
             "stations.json"
         )
 
