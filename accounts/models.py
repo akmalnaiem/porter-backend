@@ -40,13 +40,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 
 class OTP(models.Model):
-    PURPOSE_CHOICES = (
-        ("login", "Login"),
-        ("reset_password", "Reset Password"),
-    )
+    # PURPOSE_CHOICES = (
+    #     ("login", "Login"),
+    #     ("reset_password", "Reset Password"),
+    # )
     phone_number = models.CharField(max_length=15 ,db_index=True)
     code = models.CharField(max_length=6)
-    purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES, default="login")                    # login, forgot_password
+    # purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES, default="login")                    # login, forgot_password
+    purpose = models.CharField(max_length=20, default="login") 
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
 
@@ -54,7 +55,7 @@ class OTP(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["phone_number", "code", "purpose"])
+            models.Index(fields=["phone_number", "code"])
         ]
 
     def __str__(self):

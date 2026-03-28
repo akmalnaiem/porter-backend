@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self,phone_number, password=None, **extra_fields):
+    def create_user(self,phone_number, **extra_fields):
         if not phone_number:
             raise ValueError("Phone number is required")
         
@@ -10,7 +10,8 @@ class CustomUserManager(BaseUserManager):
             extra_fields["email"] = self.normalize_email(email)
 
         user = self.model(phone_number=phone_number, **extra_fields)
-        user.set_password(password)
+
+        user.set_unusable_password()
         user.save(using=self._db)
         return user
     

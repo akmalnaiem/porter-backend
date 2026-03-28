@@ -4,64 +4,55 @@ from accounts.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from accounts.utils import token_generator
+import jwt
+import datetime
+from django.conf import settings
 
 
 class SendOTPSerializer(serializers.Serializer):
-    identifier = serializers.CharField()
-    purpose = serializers.ChoiceField(choices=["login", "reset_password"])
-
-    def validate(self, data):
-        identifier = data["identifier"]
-
-        # Try finding user by email or phone_number
-        user = User.objects.filter(phone_number=identifier).first() or User.objects.filter(email=identifier).first()
-
-        if not user:
-            raise serializers.ValidationError("User not found")
-        
-        data["user"] = user
-        return data
+    # identifier = serializers.CharField()
+    phone_number = serializers.CharField()
 
     def create(self, validated_data):
-        user = validated_data["user"]
-        create_otp(
-            user.phone_number,             # Always send OTP to phone
-            validated_data["purpose"]
-            )
+        phone = validated_data["phone_number"]
+        create_otp(phone, purpose="login")
         return validated_data
     
 
 class VerifyOTPSerializer(serializers.Serializer):
-    identifier = serializers.CharField()
+    phone_number = serializers.CharField()
     code  = serializers.CharField()
-    purpose = serializers.ChoiceField(choices=["login", "reset_password"])
+    purpose = serializers.ChoiceField(choices=["login"])
 
     def validate(self, data):
-        identifier = data["identifier"]
-
-        user = User.objects.filter(phone_number=identifier).first() or User.objects.filter(email=identifier).first()
-
-        if not user:
-            raise serializers.ValidationError("User not found")
+        phone = data["phone_number"]
         
-        if not verify_otp(user.phone_number, data["code"], data["purpose"]):
+        if not verify_otp(phone, data["code"], "login"):
             raise serializers.ValidationError("Invalid or expired OTP")
         
-        # LOGIN Flow
-        if data["purpose"] == "login":
-            refresh = RefreshToken.for_user(user)
+        user = User.objects.filter(phone_number=phone).first()
 
-            data["user"] = user
-            data["refresh"] = str(refresh)
-            data["access"] = str(refresh.access_token)
+        # ✅ New User
+        if not user:
+            token = jwt.encode(
+                {
+                    "phone_number" : phone,
+                    "exp" : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)
+                },
+                settings.SECRET_KEY,
+                algorithm="HS256"
+            )
+            return {
+                "is_new_user" : True,
+                "temp_token" : token
+            }
+        
+        # ✅ Existing User
+        refresh = RefreshToken.for_user(user)
 
-        # Reset Password
-        if data["purpose"] == "reset_password":
-            uid = urlsafe_base64_encode(force_bytes(user.id))
-            token = token_generator.make_token(user)
-
-            data["uid"] = uid
-            data["reset_token"] = token
-
-        return data
+        return {
+            "is_new_user" : False,
+            "access" : str(refresh.access_token),
+            "refresh" : str(refresh),
+            "user" : user
+        }

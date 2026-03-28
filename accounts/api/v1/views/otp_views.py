@@ -8,40 +8,34 @@ class SendOTPView(APIView):
         serializer = SendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": "OTP sent"}, status=status.HTTP_200_OK)
+        return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
     
 
 class VerifyOTPView(APIView):
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-        #LOGIN RESPONSE
-        if serializer.validated_data["purpose"] == "login":
-            user = serializer.validated_data["user"]
+        # ✅ New User
+        if data["is_new_user"]:
+            return Response({
+                "is_new_user" : True,
+                "temp_token" : data["temp_token"]
+            }, status=status.HTTP_200_OK)
 
-            return Response(
-                {
-                    "message" : "Login Successful",
-                    "user" : {
-                        "uuid" : user.uuid,
-                        "full_name" : user.full_name,
-                        "phone_number" : user.phone_number,
-                        "email" : user.email,
-                        "profile_photo" : user.profile_photo.url if user.profile_photo else None
-                    },
-                    "tokens" : {
-                        "refresh" : serializer.validated_data["refresh"],
-                        "access" : serializer.validated_data["access"]
-                    },
-                },
-                status = status.HTTP_200_OK
-            )
-        
-        # RESET PASSWORD RESPONSE
+        # ✅ Existing User (Login)
         return Response({
-            "message" : "OTP verified. You can reset password now.",
-            "uid" : serializer.validated_data["uid"],
-            "reset_token" : serializer.validated_data["reset_token"],
-        })
-
+            "is_new_user" : False,
+            "user" : {
+                "uuid" : data["user"].uuid,
+                "full_name" : data["user"].full_name,
+                "phone_number" : data["user"].phone_number,
+                "email" : data["user"].email if data["user"].email else None,
+                "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None,
+            },
+            "token" : {
+                "access" : data["access"],
+                "refresh" : data["refresh"]
+            }
+        },status=status.HTTP_200_OK)
