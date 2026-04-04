@@ -1,6 +1,6 @@
 from twilio.rest import Client
 from django.conf import settings
-import logging
+import logging, time
 
 logger = logging.getLogger(__name__)
 
@@ -12,15 +12,22 @@ class TwilioService:
         )
         self.from_number = settings.TWILIO_PHONE_NUMBER
 
-    def send_sms(self, phone_number, message):
-        try:
-            message = self.client.messages.create(
-                body=message,
-                from_=self.from_number,
-                to=f"+91{phone_number}"
-            )
-            return message.sid
-        
-        except Exception as e:
-            logger.error(f"Twilio SMS failed: {str(e)}")
-            return None
+    def send_sms(self, phone_number, message, retries=3):
+        for attempt in range(retries):
+            try:
+                msg = self.client.messages.create(
+                    body=message,
+                    from_=self.from_number,
+                    to=phone_number             # already formate in otp_service
+                )
+                return msg.sid
+
+            except Exception as e:
+                logger.error(f"Twilio attempt {attempt+1} failed: {str(e)}")
+
+                # last attempt → fail
+                if attempt == retries - 1:
+                    return None
+
+                # small delay before retry (important)
+                time.sleep(1)

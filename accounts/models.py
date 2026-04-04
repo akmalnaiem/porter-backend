@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from .managers import CustomUserManager
+from django.core.validators import MinLengthValidator, RegexValidator
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -15,12 +17,34 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
 
-    full_name = models.CharField(max_length=70)
+    full_name = models.CharField(
+        max_length=70,
+        validators=[
+            MinLengthValidator(2),
+            RegexValidator(
+                regex=r'^[A-Za-z ]+$',
+                message = "Name should contain only letters and spaces."
+            )
+        ]
+    )
 
-    phone_number = models.CharField(max_length=15, unique=True)
-    email = models.EmailField(unique=True, null=True, blank=True)
+    phone_number = models.CharField(
+        max_length=16,
+        unique=True,
+        validators=[
+            MinLengthValidator(10),
+            RegexValidator(
+                regex=r'^\+?\d{10,15}$'
+            )
+        ]
+    )
 
-    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+    email = models.EmailField(
+        unique=True,
+        null=True,
+        blank=True,
+        max_length=254
+    )
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="user", db_index=True)
 
@@ -35,9 +59,27 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = []
 
+    def validate_image(file):
+        # Size check (5MB)
+        if file.size > 5 * 1024 * 1024:
+            raise ValidationError("Image size should not exceed 5MB.")
+
+        # Extension check
+        valid_extensions = ['jpg', 'jpeg', 'png', 'webp']
+        ext = file.name.split('.')[-1].lower()
+        if ext not in valid_extensions:
+            raise ValidationError("Only JPG, JPEG, PNG, WEBP allowed.")
+
+    profile_photo = models.ImageField(
+        upload_to="profile_photos/",
+        blank=True,
+        null=True,
+        validators=[validate_image]
+        )
+
     def __str__(self):
         return self.full_name
-    
+
 
 class OTP(models.Model):
     # PURPOSE_CHOICES = (

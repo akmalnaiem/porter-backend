@@ -1,10 +1,6 @@
 from rest_framework import serializers
 from accounts.models import User
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
-from accounts.utils import token_generator
 
 # Registration Serializer-
 class RegisterSerializer(serializers.ModelSerializer):
@@ -16,6 +12,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "profile_photo",
         ]
+
+    def validate_email(self, value):
+        return value.strip().lower()
     
     def create(self, validated_data):
         phone_number = self.context["phone_number"]

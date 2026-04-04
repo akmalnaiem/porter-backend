@@ -8,7 +8,10 @@ class SendOTPView(APIView):
         serializer = SendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
+        return Response({
+            "message": "OTP sent successfully",
+            "retry_after": 60
+            }, status=status.HTTP_200_OK)
     
 
 class VerifyOTPView(APIView):
@@ -18,24 +21,29 @@ class VerifyOTPView(APIView):
         data = serializer.validated_data
 
         # ✅ New User
-        if data["is_new_user"]:
+        if data["user_status"] == "NEW":
             return Response({
-                "is_new_user" : True,
-                "temp_token" : data["temp_token"]
-            }, status=status.HTTP_200_OK)
-
-        # ✅ Existing User (Login)
-        return Response({
-            "is_new_user" : False,
-            "user" : {
-                "uuid" : data["user"].uuid,
-                "full_name" : data["user"].full_name,
-                "phone_number" : data["user"].phone_number,
-                "email" : data["user"].email if data["user"].email else None,
-                "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None,
-            },
-            "token" : {
+                "user_status" : data["user_status"],
+                "temp_token" : data["temp_token"],
+                "user" : data["user"],
                 "access" : data["access"],
                 "refresh" : data["refresh"]
-            }
-        },status=status.HTTP_200_OK)
+            }, status=status.HTTP_200_OK)
+
+        else:
+            # ✅ Existing User (Login)
+            return Response({
+                "user_status" : data["user_status"],
+                "temp_token" : data["temp_token"],
+                "user" : {
+                    "uuid" : data["user"].uuid,
+                    "full_name" : data["user"].full_name,
+                    "phone_number" : data["user"].phone_number,
+                    "email" : data["user"].email if data["user"].email else None,
+                    "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None,
+                },
+                "token" : {
+                    "access" : data["access"],
+                    "refresh" : data["refresh"]
+                }
+            },status=status.HTTP_200_OK)
