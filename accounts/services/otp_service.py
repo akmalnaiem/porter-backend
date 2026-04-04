@@ -5,6 +5,7 @@ from ..models import OTP
 from .twilio_service import TwilioService
 from rest_framework.exceptions import ValidationError
 import phonenumbers
+from django.conf import settings
 
 
 OTP_RATE_LIMIT = 3   # max OTP per window
@@ -53,6 +54,10 @@ def create_otp(phone_number):
 
     otp = OTP.objects.create(phone_number=phone_number, code=code, expires_at=expires_at)
 
+    # Handling bypass logic for few phonenumbers inorder for testing/development
+    if phone_number in settings.OTP_BYPASS_NUMBERS:
+        return True
+
     # ✅ Send SMS
     sms_service = TwilioService()
     message = f"Your OTP is {code}. It will expires in 5 minutes."
@@ -63,7 +68,7 @@ def create_otp(phone_number):
         otp.delete()
         # Optional: you can raise exception or handle retry logic
         # print("SMS sending failed")
-        raise Exception(f"SMS sending failed after retries")
+        raise ValidationError({"error" : "Failed to send OTP. Try again later."})
 
     # print(f"OTP for {phone_number} ({purpose}): {code}")
     return True

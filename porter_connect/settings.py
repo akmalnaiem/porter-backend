@@ -208,3 +208,9 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+
+
+# Added for by passing numbers for development/testing
+OTP_BYPASS_NUMBERS = [
+    num.strip() for num in config("OTP_BYPASS_NUMBERS", default="").split(",") if num.strip()
+]
