@@ -18,8 +18,10 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
+from .views import home
 
 urlpatterns = [
+    path("", home),
     path('admin/', admin.site.urls),
     path('api/v1/accounts/', include("accounts.api.v1.urls")),
     path('api/v1/stations/', include("stations.api.v1.urls")),
