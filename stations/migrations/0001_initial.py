@@ -15,14 +15,14 @@ class Migration(migrations.Migration):
             name='Station',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('stn_code', models.CharField(max_length=10, unique=True)),
-                ('stn_name', models.CharField(max_length=120)),
-                ('stn_city', models.CharField(max_length=120)),
+                ('stnCode', models.CharField(max_length=10, unique=True)),
+                ('stnName', models.CharField(max_length=120)),
+                ('stnCity', models.CharField(max_length=120)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'ordering': ['stn_name'],
-                'indexes': [models.Index(fields=['stn_code'], name='stations_st_stn_code_c89cc2_idx'), models.Index(fields=['stn_name'], name='stations_st_stn_name_61924f_idx'), models.Index(fields=['stn_city'], name='stations_st_stn_city_5b6ed1_idx')],
+                'ordering': ['stnName'],
+                'indexes': [models.Index(fields=['stnCode'], name='stations_st_stnCode_c89cc2_idx'), models.Index(fields=['stnName'], name='stations_st_stnName_61924f_idx'), models.Index(fields=['stnCity'], name='stations_st_stnCity_5b6ed1_idx')],
             },
         ),
     ]
