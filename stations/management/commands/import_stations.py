@@ -32,9 +32,9 @@ class Command(BaseCommand):
 
             stations.append(
                 Station(
-                    stnCode=item["stnCode"],
-                    stnName=item["stnName"],
-                    stnCity=item["stnCity"]
+                    stn_code=item["stnCode"],
+                    stn_name=item["stnName"],
+                    stn_city=item["stnCity"]
                 )
             )
 

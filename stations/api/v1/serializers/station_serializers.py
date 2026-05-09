@@ -7,7 +7,7 @@ class StationSerializer(serializers.ModelSerializer):
         model = Station
         fields = [
             "id",
-            "stnCode",
-            "stnName",
-            "stnCity"
+            "stn_code",
+            "stn_name",
+            "stn_city"
         ]
