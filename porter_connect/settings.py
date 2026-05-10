@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'porter',
     'users',
     'stations',
+    'trains.apps.TrainsConfig',
 ]
 
 MIDDLEWARE = [
