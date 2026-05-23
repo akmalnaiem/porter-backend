@@ -2,8 +2,11 @@ from accounts.api.v1.serializers.otp_serializers import SendOTPSerializer, Verif
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
+
 
 class SendOTPView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = SendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -15,6 +18,8 @@ class SendOTPView(APIView):
     
 
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
