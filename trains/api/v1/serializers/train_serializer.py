@@ -3,7 +3,7 @@ from rest_framework import serializers
 from trains.models import Train
 
 
-class TrainSerialzier(serializers.ModelSerializer):
+class TrainSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Train

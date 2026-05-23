@@ -23,8 +23,12 @@ class TwilioService:
                 return msg.sid
 
             except Exception as e:
-                print("❌ Twilio Error:", str(e))
-                logger.error(f"Twilio attempt {attempt+1} failed: {str(e)}")
+                logger.error(
+                    "Twilio attempt %s failed: %s",
+                    attempt + 1,
+                    e,
+                    exc_info=True,
+                )
 
                 # last attempt → fail
                 if attempt == retries - 1:

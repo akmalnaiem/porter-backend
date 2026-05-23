@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from trains.models import Train
-from trains.api.v1.serializers.train_serializer import TrainSerialzier
+from trains.api.v1.serializers.train_serializer import TrainSerializer
 from porter_connect.pagination import DefaultPagination
 
 
@@ -27,7 +27,7 @@ class TrainListAPIView(APIView):
                     Q(train_name__iexact=search)
                 )
             
-                serializer = TrainSerialzier(queryset, many=True)
+                serializer = TrainSerializer(queryset, many=True)
 
                 return Response(
                     {
@@ -43,7 +43,7 @@ class TrainListAPIView(APIView):
                 paginator = DefaultPagination()
                 page = paginator.paginate_queryset(queryset, request)
 
-                serializer = TrainSerialzier(page, many=True)
+                serializer = TrainSerializer(page, many=True)
 
                 return paginator.get_paginated_response(serializer.data)
         
