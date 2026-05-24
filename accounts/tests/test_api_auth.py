@@ -22,20 +22,20 @@ MINIMAL_PNG = (
 
 
 @pytest.mark.django_db
-class TestRegisterAPI:
+class TestUserRegisterAPI:
     def test_register_missing_temp_token_returns_404(self, client):
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {"full_name": "New User"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert response.data["error"] == "Token missing"
+        assert response.data["error"] == "Temp token required"
 
     def test_register_invalid_temp_token(self, client):
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": make_registration_temp_token(invalid=True),
                 "full_name": "New User",
@@ -48,7 +48,7 @@ class TestRegisterAPI:
 
     def test_register_expired_temp_token(self, client):
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": make_registration_temp_token(expired=True),
                 "full_name": "New User",
@@ -63,29 +63,46 @@ class TestRegisterAPI:
         token = make_registration_temp_token()
 
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": token,
-                "full_name": "New Porter",
-                "email": "newporter@example.com",
+                "full_name": "New User",
+                "email": "newuser@example.com",
             },
             format="json",
         )
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["user"]["full_name"] == "New Porter"
+        assert response.data["user"]["full_name"] == "New User"
         assert response.data["user"]["phone_number"] == VALID_PHONE_E164
-        assert response.data["user"]["email"] == "newporter@example.com"
+        assert response.data["user"]["email"] == "newuser@example.com"
+        assert response.data["user"]["role"] == "user"
         assert response.data["tokens"]["access"]
         assert response.data["tokens"]["refresh"]
 
         user = User.objects.get(phone_number=VALID_PHONE_E164)
-        assert user.full_name == "New Porter"
-        assert user.email == "newporter@example.com"
+        assert user.full_name == "New User"
+        assert user.role == "user"
+
+    def test_register_with_raw_phone_in_token_stores_e164(self, client):
+        token = make_registration_temp_token(phone_number=VALID_PHONE_RAW)
+
+        response = client.post(
+            accounts_url("user/register/"),
+            {
+                "temp_token": token,
+                "full_name": "Normalized User",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["user"]["phone_number"] == VALID_PHONE_E164
+        assert User.objects.filter(phone_number=VALID_PHONE_E164).exists()
 
     def test_register_rejects_invalid_full_name(self, client):
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": make_registration_temp_token(),
                 "full_name": "User123",
@@ -102,7 +119,7 @@ class TestRegisterAPI:
             content_type="image/png",
         )
         response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": make_registration_temp_token(
                     phone_number="+919876543230"
@@ -116,6 +133,26 @@ class TestRegisterAPI:
         assert response.status_code == status.HTTP_201_CREATED
         user = User.objects.get(phone_number="+919876543230")
         assert user.profile_photo
+
+
+@pytest.mark.django_db
+class TestPorterRegisterAPI:
+    def test_porter_register_sets_role(self, client):
+        token = make_registration_temp_token(phone_number="+919876543231")
+
+        response = client.post(
+            accounts_url("porter/register/"),
+            {
+                "temp_token": token,
+                "full_name": "New Porter",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["user"]["role"] == "porter"
+        user = User.objects.get(phone_number="+919876543231")
+        assert user.role == "porter"
 
 
 @pytest.mark.django_db
@@ -156,7 +193,7 @@ class TestAuthFlowIntegration:
 
         otp = OTP.objects.filter(phone_number=VALID_PHONE_E164).latest("created_at")
         verify_response = client.post(
-            accounts_url("otp/verify/"),
+            accounts_url("user/otp/verify/"),
             {"phone_number": VALID_PHONE_RAW, "code": otp.code},
             format="json",
         )
@@ -164,7 +201,7 @@ class TestAuthFlowIntegration:
         assert verify_response.data["user_status"] == "NEW"
 
         register_response = client.post(
-            accounts_url("register/"),
+            accounts_url("user/register/"),
             {
                 "temp_token": verify_response.data["temp_token"],
                 "full_name": "Flow User",
@@ -187,8 +224,8 @@ class TestAuthFlowIntegration:
         create_otp_record(phone_number="+919876543240")
 
         response = client.post(
-            accounts_url("otp/verify/"),
-            {"phone_number": "+919876543240", "code": VALID_OTP_CODE},
+            accounts_url("user/otp/verify/"),
+            {"phone_number": "9876543240", "code": VALID_OTP_CODE},
             format="json",
         )
 

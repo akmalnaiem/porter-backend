@@ -4,8 +4,9 @@ from datetime import timedelta
 from ..models import OTP
 from .twilio_service import TwilioService
 from rest_framework.exceptions import ValidationError
-import phonenumbers
 from django.conf import settings
+
+from accounts.utils import format_phone
 
 
 OTP_RATE_LIMIT = 3   # max OTP per window
@@ -13,20 +14,6 @@ OTP_RATE_WINDOW = 60 # seconds
 
 def generate_otp():
     return str(random.randint(100000, 999999))
-
-
-# phone formatter
-def format_phone(phone_number, region="IN"):
-    try:
-        parsed = phonenumbers.parse(phone_number, region)
-
-        if not phonenumbers.is_valid_number(parsed):
-            raise ValidationError("Invalid phone number")
-
-        return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
-
-    except Exception:
-        raise ValidationError("Invalid phone number format")
 
 
 def check_rate_limit(phone_number):

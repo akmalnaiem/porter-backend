@@ -1,11 +1,17 @@
+import jwt
+
+from django.conf import settings
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenRefreshView
+
 from accounts.api.v1.serializers.auth_serializers import RegisterSerializer
-import jwt
-from django.conf import settings
+
 
 
 class PublicTokenRefreshView(TokenRefreshView):
@@ -13,13 +19,17 @@ class PublicTokenRefreshView(TokenRefreshView):
 
 
 # Register View-
-class RegisterView(APIView):
+class BaseRegisterView(APIView):
     permission_classes = [AllowAny]
+
+    role = None
+
     def post(self, request):
+
         token = request.data.get("temp_token")
 
         if not token:
-            return Response({"error" : "Token missing"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error" : "Temp token required"}, status=status.HTTP_404_NOT_FOUND)
         else:
             token = token.strip()
             
@@ -29,8 +39,11 @@ class RegisterView(APIView):
                 settings.SECRET_KEY,
                 algorithms=["HS256"]
             )
-            phone_number = payload["phone_number"]
-            
+            phone_number = payload.get("phone_number")
+
+            if not phone_number:
+                raise AuthenticationFailed("Phone number missing in token")
+
         except jwt.ExpiredSignatureError:
             return Response({"error" : "Token expired"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -39,8 +52,12 @@ class RegisterView(APIView):
         
         serializer = RegisterSerializer(
             data = request.data,
-            context = {"phone_number" : phone_number}
+            context = {
+                "phone_number" : phone_number,
+                "role": self.role
+                }
         )
+
         serializer.is_valid(raise_exception=True)
         data = serializer.save()
 
@@ -50,7 +67,8 @@ class RegisterView(APIView):
                 "full_name" : data["user"].full_name,
                 "phone_number" : data["user"].phone_number,
                 "email" : data["user"].email if data["user"].email else None,
-                "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None
+                "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None,
+                "role" : data["user"].role
             },
             "tokens" : {
                 "access" : data["access"],
@@ -58,3 +76,10 @@ class RegisterView(APIView):
             }
         }, status=status.HTTP_201_CREATED
         )
+
+
+class UserRegisterView(BaseRegisterView):
+    role = "user"
+
+class PorterRegisterView(BaseRegisterView):
+    role = "porter"
