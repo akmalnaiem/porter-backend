@@ -3,5 +3,5 @@ UNFOLD = {
     "SITE_HEADER": "Porter Connect",
     "SITE_URL": "/",
 
-    "THEME": "light",
+    "THEME": "dark",
 }
