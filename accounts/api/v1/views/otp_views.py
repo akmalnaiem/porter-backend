@@ -52,7 +52,12 @@ class BaseVerifyOTPView(APIView):
                     "phone_number" : data["user"].phone_number,
                     "email" : data["user"].email if data["user"].email else None,
                     "profile_photo" : data["user"].profile_photo.url if data["user"].profile_photo else None,
-                    "role": data["user"].role
+                    "role": data["user"].role,
+                    "language": data["user"].language.code if data["user"].language else None,
+                    "gender": data["user"].gender,
+
+                    # Traveller
+                    "city": data["user"].city if data["user"].role == "user" else None
                 },
                 "token" : {
                     "access" : data["access"],

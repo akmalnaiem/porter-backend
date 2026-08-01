@@ -23,3 +23,10 @@ env/
 # IDE files
 .vscode/
 .idea/
+
+
+# Endpoint documentation
+api_documentation.md
+
+# Creds
+superuser_creds.txt

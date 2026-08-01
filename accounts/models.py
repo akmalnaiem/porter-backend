@@ -5,14 +5,54 @@ from django.utils import timezone
 from .managers import CustomUserManager
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
+from django.db.utils import OperationalError, ProgrammingError
 
 # Create your models here.
+
+class Language(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            Language.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_default(cls):
+
+        try:
+            return cls.objects.filter(is_default=True, is_active=True).first()
+        except (OperationalError, ProgrammingError):
+            return None
+
+    @classmethod
+    def get_default_id(cls):
+        default = cls.get_default()
+        return default.pk if default else None
+
+    def __str__(self):
+        return self.name
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = (
         ("user", "User"),
         ("porter", "Porter"),
         ("admin", "Admin"),
+    )
+
+    GENDER_CHOICES = (
+        ("male", "Male"),
+        ("female", "Female"),
+        ("other", "Other"),
     )
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
@@ -46,7 +86,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=254
     )
 
+    city = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, db_index=True)
+
+    language = models.ForeignKey(
+        Language,
+        null=True,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        default= Language.get_default_id,
+        related_name="users"
+    )
+
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

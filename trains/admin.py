@@ -1,9 +1,10 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Train
 
 # Register your models here.
 
-class MyTrain(admin.ModelAdmin):
+class MyTrain(ModelAdmin):
     list_display = ("id", "train_number", "train_name", "is_active")
     readonly_fields = ("id", "is_active")
     search_fields = ("train_number", "train_name")

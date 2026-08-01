@@ -46,7 +46,6 @@ class SendOTPSerializer(serializers.Serializer):
         phone = validated_data["phone_number"]
         create_otp(phone)
         return validated_data
-    
 
 class VerifyOTPSerializer(serializers.Serializer):
     phone_number = serializers.CharField(
@@ -78,7 +77,7 @@ class VerifyOTPSerializer(serializers.Serializer):
         # OTP Validation
         if not verify_otp(phone, code):
             raise serializers.ValidationError({"code": ["Invalid or expired OTP."]})
-        
+
         user = User.objects.filter(phone_number=phone).first()
 
         # ✅ New User
@@ -98,7 +97,7 @@ class VerifyOTPSerializer(serializers.Serializer):
                 "access" : None,
                 "refresh" : None
             }
-        
+
         # ✅ Existing User
 
         # APP ROLE VALIDATION
