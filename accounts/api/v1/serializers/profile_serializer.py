@@ -3,8 +3,27 @@ from django.db import transaction
 
 from accounts.models import User, Language
 
-# Profile Update Serializer
 
+# Profile Serializer
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "uuid",
+            "full_name",
+            "phone_number",
+            "email",
+            "city",
+            "role",
+            "language",
+            "gender",
+            "profile_photo",
+            "created_at"
+        ]
+        read_only_fields = ["uuid", "full_name", "phone_number", "email", "city", "role", "language", "gender", "profile_photo", "created_at"]
+
+
+# Profile Update Serializer
 class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     language = serializers.PrimaryKeyRelatedField(
@@ -87,7 +106,6 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     # Object Level Validation
     def validate(self, attrs):
         user = self.instance
-# safety check
         # safety check
         if user.role == "porter" and "city" in attrs:
             raise serializers.ValidationError({

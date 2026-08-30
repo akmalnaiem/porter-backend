@@ -1,7 +1,7 @@
 from django.urls import path
 from .views.auth_views import PublicTokenRefreshView, UserRegisterView, PorterRegisterView
 from .views.otp_views import SendOTPView, UserVerifyOTPView, PorterVerifyOTPView
-from .views.profile_views import ProfileView
+from .views.profile_views import ProfileView, ProfileUpdateView
 
 urlpatterns = [
     # Registration
@@ -20,4 +20,5 @@ urlpatterns = [
 
     # Profile
     path("profile/", ProfileView.as_view()),
+    path("profile/update/", ProfileUpdateView.as_view()),
 ]
